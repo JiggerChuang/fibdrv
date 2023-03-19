@@ -11,9 +11,10 @@ int main()
 {
     long long sz;
 
-    char buf[1];
+    char buf[256];
+    size_t buf_size = sizeof(buf) / sizeof(char);
     char write_buf[] = "testing writing";
-    int offset = 100; /* TODO: try test something bigger than the limit */
+    int offset = 500; /* TODO: try test something bigger than the limit */
 
     int fd = open(FIB_DEV, O_RDWR);
     if (fd < 0) {
@@ -28,20 +29,30 @@ int main()
 
     for (int i = 0; i <= offset; i++) {
         lseek(fd, i, SEEK_SET);
-        sz = read(fd, buf, 1);
+        sz = read(fd, buf, buf_size);
+
+        char *output = (char *) malloc(sz + 1);
+        strncpy(output, buf, sz);
+        output[sz] = '\0';
+
         printf("Reading from " FIB_DEV
                " at offset %d, returned the sequence "
-               "%lld.\n",
-               i, sz);
+               "%s.\n",
+               i, output);
     }
 
     for (int i = offset; i >= 0; i--) {
         lseek(fd, i, SEEK_SET);
-        sz = read(fd, buf, 1);
+        sz = read(fd, buf, buf_size);
+
+        char *output = (char *) malloc(sz + 1);
+        strncpy(output, buf, sz);
+        output[sz] = '\0';
+
         printf("Reading from " FIB_DEV
                " at offset %d, returned the sequence "
-               "%lld.\n",
-               i, sz);
+               "%s.\n",
+               i, output);
     }
 
     close(fd);

@@ -17,26 +17,132 @@ MODULE_VERSION("0.1");
 /* MAX_LENGTH is set to 92 because
  * ssize_t can't fit the number > 92
  */
-#define MAX_LENGTH 92
+#define MAX_LENGTH 500
 
 static dev_t fib_dev = 0;
 static struct cdev *fib_cdev;
 static struct class *fib_class;
 static DEFINE_MUTEX(fib_mutex);
 
-static long long fib_sequence(long long k)
+// static long long fib_sequence(long long k)
+// {
+//     /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel.
+//     */ long long f[k + 2];
+
+//     f[0] = 0;
+//     f[1] = 1;
+
+//     for (int i = 2; i <= k; i++) {
+//         f[i] = f[i - 1] + f[i - 2];
+//     }
+
+//     return f[k];
+// }
+
+static void char_swap(char *a, char *b)
+{
+    char temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+static void reverse_string(char *l, char *r)
+{
+    --r;
+    while (l < r) {
+        char_swap(l, r);
+        ++l;
+        --r;
+    }
+}
+
+static void string_number_add(char *b, char *a, char *res, size_t size)
+{
+    int carry = 0;
+    // int n = (*digits) + 1;
+
+    for (int i = 0; i < size; i++) {
+        // printk(KERN_INFO "[fibdrv] iteration i: %d\n", i);
+        // printk(KERN_INFO "[fibdrv] string b before: %s\n", b);
+        // printk(KERN_INFO "[fibdrv] string a before: %s\n", a);
+        // printk(KERN_INFO "[fibdrv] string res before: %s\n", res);
+        // printk(KERN_INFO "[fibdrv] digits before: %d\n", *digits);
+
+        int temp = (b[i] - '0') + (a[i] - '0') + carry;
+        // printk(KERN_INFO "[fibdrv] temp 1: %d\n", temp);
+        carry = temp / 10;
+        temp = temp % 10;
+        // printk(KERN_INFO "[fibdrv] temp 2: %d\n", temp);
+        res[i] = temp + '0';
+
+        // printk(KERN_INFO "[fibdrv] string b after: %s\n", b);
+        // printk(KERN_INFO "[fibdrv] string a after: %s\n", a);
+        // printk(KERN_INFO "[fibdrv] string res after: %s\n", res);
+        // printk(KERN_INFO "[fibdrv] digits after: %d\n", *digits);
+        // printk(KERN_INFO "+++++++++++++++++++++++++++++++++++\n");
+    }
+}
+
+static long long fib_sequence(long long k, char *buf, size_t size)
 {
     /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel. */
-    long long f[k + 2];
+    char a[size + 1];
+    char b[size + 1];
+    char res[size + 1];
+    long long digits = size;
 
-    f[0] = 0;
-    f[1] = 1;
+    memset(a, '0', size);
+    memset(b, '0', size);
+    memset(res, '0', size);
+    a[size] = '\0';
+    b[size] = '\0';
+    res[size] = '\0';
+
+    a[0] = '0'; /* a for f[i - 2] */
+    b[0] = '1'; /* b for f[i - 1] */
+
+    if (k == 0)
+        strncpy(res, a, 1);
+    if (k == 1)
+        strncpy(res, b, 1);
+
+    // printk(KERN_INFO "[fibdrv] k: %lld\n", k);
 
     for (int i = 2; i <= k; i++) {
-        f[i] = f[i - 1] + f[i - 2];
+        // if (i >= 92){
+        //     printk(KERN_INFO "[fibdrv] fibonacci: %d\n", i);
+        //     printk(KERN_INFO "[fibdrv] string res before: %s\n", res);
+        // }
+
+        string_number_add(b, a, res, size);
+
+        strncpy(a, b, size);
+        strncpy(b, res, size);
+
+        // if (i >= 92){
+        //     printk(KERN_INFO "[fibdrv] string res after: %s\n", res);
+        //     printk(KERN_INFO "====================================\n");
+        // }
     }
 
-    return f[k];
+    /* get digits of res */
+    for (int i = size - 1; i > 0; i--) {
+        if (res[i] != '0')
+            break;
+        digits--;
+    }
+    // printk(KERN_INFO "[fibdrv] digits after: %lld\n", digits);
+
+    char out[digits + 1];
+    strncpy(out, res, digits);
+    out[digits] = '\0';
+    reverse_string(&out[0], &out[digits]);
+
+    // printk(KERN_INFO "[fibdrv] string res after: %s\n", out);
+
+    copy_to_user(buf, out, digits);
+
+    return digits;
 }
 
 static int fib_open(struct inode *inode, struct file *file)
@@ -60,7 +166,7 @@ static ssize_t fib_read(struct file *file,
                         size_t size,
                         loff_t *offset)
 {
-    return (ssize_t) fib_sequence(*offset);
+    return (ssize_t) fib_sequence(*offset, buf, size);
 }
 
 /* write operation is skipped */
