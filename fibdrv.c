@@ -24,21 +24,6 @@ static struct cdev *fib_cdev;
 static struct class *fib_class;
 static DEFINE_MUTEX(fib_mutex);
 
-// static long long fib_sequence(long long k)
-// {
-//     /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel.
-//     */ long long f[k + 2];
-
-//     f[0] = 0;
-//     f[1] = 1;
-
-//     for (int i = 2; i <= k; i++) {
-//         f[i] = f[i - 1] + f[i - 2];
-//     }
-
-//     return f[k];
-// }
-
 static void char_swap(char *a, char *b)
 {
     char temp = *a;
@@ -59,27 +44,12 @@ static void reverse_string(char *l, char *r)
 static void string_number_add(char *b, char *a, char *res, size_t size)
 {
     int carry = 0;
-    // int n = (*digits) + 1;
 
     for (int i = 0; i < size; i++) {
-        // printk(KERN_INFO "[fibdrv] iteration i: %d\n", i);
-        // printk(KERN_INFO "[fibdrv] string b before: %s\n", b);
-        // printk(KERN_INFO "[fibdrv] string a before: %s\n", a);
-        // printk(KERN_INFO "[fibdrv] string res before: %s\n", res);
-        // printk(KERN_INFO "[fibdrv] digits before: %d\n", *digits);
-
         int temp = (b[i] - '0') + (a[i] - '0') + carry;
-        // printk(KERN_INFO "[fibdrv] temp 1: %d\n", temp);
         carry = temp / 10;
         temp = temp % 10;
-        // printk(KERN_INFO "[fibdrv] temp 2: %d\n", temp);
         res[i] = temp + '0';
-
-        // printk(KERN_INFO "[fibdrv] string b after: %s\n", b);
-        // printk(KERN_INFO "[fibdrv] string a after: %s\n", a);
-        // printk(KERN_INFO "[fibdrv] string res after: %s\n", res);
-        // printk(KERN_INFO "[fibdrv] digits after: %d\n", *digits);
-        // printk(KERN_INFO "+++++++++++++++++++++++++++++++++++\n");
     }
 }
 
@@ -106,23 +76,11 @@ static long long fib_sequence(long long k, char *buf, size_t size)
     if (k == 1)
         strncpy(res, b, 1);
 
-    // printk(KERN_INFO "[fibdrv] k: %lld\n", k);
-
     for (int i = 2; i <= k; i++) {
-        // if (i >= 92){
-        //     printk(KERN_INFO "[fibdrv] fibonacci: %d\n", i);
-        //     printk(KERN_INFO "[fibdrv] string res before: %s\n", res);
-        // }
-
         string_number_add(b, a, res, size);
 
         strncpy(a, b, size);
         strncpy(b, res, size);
-
-        // if (i >= 92){
-        //     printk(KERN_INFO "[fibdrv] string res after: %s\n", res);
-        //     printk(KERN_INFO "====================================\n");
-        // }
     }
 
     /* get digits of res */
@@ -131,15 +89,11 @@ static long long fib_sequence(long long k, char *buf, size_t size)
             break;
         digits--;
     }
-    // printk(KERN_INFO "[fibdrv] digits after: %lld\n", digits);
 
     char out[digits + 1];
     strncpy(out, res, digits);
     out[digits] = '\0';
     reverse_string(&out[0], &out[digits]);
-
-    // printk(KERN_INFO "[fibdrv] string res after: %s\n", out);
-
     copy_to_user(buf, out, digits);
 
     return digits;
