@@ -14,7 +14,7 @@ int main()
     char buf[256];
     size_t buf_size = sizeof(buf) / sizeof(char);
     char write_buf[] = "testing writing";
-    int offset = 500; /* TODO: try test something bigger than the limit */
+    int offset = 100; /* TODO: try test something bigger than the limit */
 
     int fd = open(FIB_DEV, O_RDWR);
     if (fd < 0) {

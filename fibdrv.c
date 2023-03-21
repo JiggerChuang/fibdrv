@@ -7,6 +7,9 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 
+// __copy_to_user
+#include <linux/uaccess.h>
+
 MODULE_LICENSE("Dual MIT/GPL");
 MODULE_AUTHOR("National Cheng Kung University, Taiwan");
 MODULE_DESCRIPTION("Fibonacci engine driver");
