@@ -7,13 +7,17 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 
-// __copy_to_user
+/* copy_to_user */
 #include <linux/uaccess.h>
+/* k_time */
+#include <linux/ktime.h>
 
 MODULE_LICENSE("Dual MIT/GPL");
 MODULE_AUTHOR("National Cheng Kung University, Taiwan");
 MODULE_DESCRIPTION("Fibonacci engine driver");
 MODULE_VERSION("0.1");
+
+static ktime_t kt;
 
 #define DEV_FIBONACCI_NAME "fibonacci"
 
@@ -58,6 +62,8 @@ static void string_number_add(char *b, char *a, char *res, size_t size)
 
 static long long fib_sequence(long long k, char *buf, size_t size)
 {
+    kt = ktime_get();
+
     /* FIXME: C99 variable-length array (VLA) is not allowed in Linux kernel. */
     char a[size + 1];
     char b[size + 1];
@@ -99,6 +105,8 @@ static long long fib_sequence(long long k, char *buf, size_t size)
     reverse_string(&out[0], &out[digits]);
     copy_to_user(buf, out, digits);
 
+    kt = ktime_sub(ktime_get(), kt);
+
     return digits;
 }
 
@@ -132,7 +140,7 @@ static ssize_t fib_write(struct file *file,
                          size_t size,
                          loff_t *offset)
 {
-    return 1;
+    return ktime_to_ns(kt);
 }
 
 static loff_t fib_device_lseek(struct file *file, loff_t offset, int orig)

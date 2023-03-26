@@ -5,7 +5,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+/* time */
+#include <time.h>
+
 #define FIB_DEV "/dev/fibonacci"
+
+long long get_time_ns()
+{
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return ts.tv_nsec;
+}
 
 int main()
 {
@@ -22,14 +32,28 @@ int main()
         exit(1);
     }
 
-    for (int i = 0; i <= offset; i++) {
-        sz = write(fd, write_buf, strlen(write_buf));
-        printf("Writing to " FIB_DEV ", returned the sequence %lld\n", sz);
+    FILE *data = fopen("data.txt", "w");
+    if (!data) {
+        perror("Failed to open data text");
+        exit(2);
     }
 
+    // for (int i = 0; i <= offset; i++) {
+    //     sz = write(fd, write_buf, strlen(write_buf));
+    //     printf("Writing to " FIB_DEV ", returned the sequence %lld\n", sz);
+    // }
+
     for (int i = 0; i <= offset; i++) {
+        long long ut = get_time_ns(); /* get start time */
+
         lseek(fd, i, SEEK_SET);
         sz = read(fd, buf, buf_size);
+
+        ut = get_time_ns() - ut; /* get user execution time */
+        long long kt =
+            write(fd, write_buf, strlen(write_buf)); /* get kernel time */
+        fprintf(data, "%d %lld %lld %lld\n", i, ut, kt,
+                (ut - kt)); /* store profiling to data.txt */
 
         char *output = (char *) malloc(sz + 1);
         strncpy(output, buf, sz);
@@ -55,6 +79,7 @@ int main()
                i, output);
     }
 
+    fclose(data);
     close(fd);
     return 0;
 }

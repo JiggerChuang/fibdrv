@@ -18,7 +18,7 @@ $(GIT_HOOKS):
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
-	$(RM) client out
+	$(RM) client out data.txt
 load:
 	sudo insmod $(TARGET_MODULE).ko
 unload:
@@ -26,6 +26,13 @@ unload:
 
 client: client.c
 	$(CC) -o $@ $^
+
+plot: all
+	$(MAKE) unload
+	$(MAKE) load
+	@python3 scripts/driver.py
+	$(MAKE) unload
+	$(MAKE) clean
 
 PRINTF = env printf
 PASS_COLOR = \e[32;01m
