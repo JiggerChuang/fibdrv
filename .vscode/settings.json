@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "ktime.h": "c",
+        "string.h": "c"
+    }
+}
