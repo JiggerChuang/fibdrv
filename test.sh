@@ -5,6 +5,6 @@ make clean
 make
 sudo insmod fibdrv.ko
 sudo ./client
-#sudo dmesg --read-clear
+sudo dmesg --read-clear
 sudo rmmod fibdrv
 make clean

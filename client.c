@@ -79,6 +79,18 @@ int main()
                i, output);
     }
 
+    // /* DEBUG with single index */
+    // lseek(fd, 10, SEEK_SET);
+    // sz = read(fd, buf, buf_size);
+    // char *output = (char *) malloc(sz + 1);
+    // strncpy(output, buf, sz);
+    // output[sz] = '\0';
+    // printf("Reading from " FIB_DEV
+    //            " at offset %d, returned the sequence "
+    //            "%s.\n",
+    //            10, output);
+    // /* END DEBUG */
+
     fclose(data);
     close(fd);
     return 0;
